@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Price Results</title>
+</head>
+<body>
+    <h1>Item Prices</h1>
+    <ul>
+        {% for item, price in results %}
+            <li><strong>{{ item }}:</strong> {{ price }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Total: {{ total }}</h2>
+    <a href="/download">Download CSV</a><br><br>
+    <a href="/">Start Over</a>
+</body>
+</html>
