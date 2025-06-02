@@ -1,0 +1,36 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Heroku build artifacts (if any)
+*.sqlite3
+
+# Python egg stuff
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Compiled files
+*.so
