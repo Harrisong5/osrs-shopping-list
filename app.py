@@ -1,6 +1,7 @@
 import os
 import csv
 import io
+import logging
 from flask import Flask, render_template, request, redirect, send_file, session
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -11,6 +12,9 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")  # Should be set in Heroku config
 
@@ -18,42 +22,55 @@ def transform_list(input_list):
     return [item.lower().replace(" ", "-") for item in input_list]
 
 def get_price(items):
-    chrome_options = Options()
-    chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN", "/usr/bin/google-chrome")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--no-sandbox")
+    try:
+        chrome_options = Options()
+        chrome_options.binary_location = "/usr/bin/google-chrome"
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--no-sandbox")
 
-    chrome_service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH", "/usr/bin/chromedriver"))
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-    total = 0
-    results = []
+        total = 0
+        results = []
 
-    for item in items:
-        url = f"https://www.ge-tracker.com/item/{item}"
-        driver.get(url)
+        for item in items:
+            # Construct URL
+            url = f"https://www.ge-tracker.com/item/{item}"
+            
+            # Log the URL being fetched
+            logging.info(f"Fetching URL: {url}")
+            
+            driver.get(url)
 
-        try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "has-tooltip"))
-            )
+            try:
+                WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "has-tooltip"))
+                )
 
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-            tooltip_spans = soup.find_all("span", class_="has-tooltip")
+                soup = BeautifulSoup(driver.page_source, "html.parser")
+                tooltip_spans = soup.find_all("span", class_="has-tooltip")
 
-            if tooltip_spans:
-                price_text = tooltip_spans[0].text.strip()
-                numeric_price = int(price_text.replace(",", ""))
-                results.append((item.replace("-", " ").title(), price_text))
-                total += numeric_price
-            else:
-                results.append((item.replace("-", " ").title(), "Not found"))
-        except Exception:
-            results.append((item.replace("-", " ").title(), "Error"))
+                if tooltip_spans:
+                    price_text = tooltip_spans[0].text.strip()
+                    numeric_price = int(price_text.replace(",", ""))
+                    logging.info(f"Fetched price for {item}: {numeric_price}")
+                    results.append((item.replace("-", " ").title(), price_text))
+                    total += numeric_price
+                else:
+                    logging.warning(f"Price not found for {item}")
+                    results.append((item.replace("-", " ").title(), "Price not found"))
+            except Exception as e:
+                logging.error(f"Error fetching item '{item}': {e}")
+                results.append((item.replace("-", " ").title(), "Error fetching price"))
+
+        driver.quit()
+        logging.info(f"Total price: {total}")
+        return results, total
     
-    driver.quit()
-    return results, total
+    except Exception as e:
+        logging.error(f"Error in get_price function: {e}")
+        return [], 0
 
 @app.route("/", methods=["GET", "POST"])
 def index():
