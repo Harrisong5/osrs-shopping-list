@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")  # Should be set in Heroku config
+app.secret_key = os.environ.get("SECRET_KEY")  # Should be set in Heroku config
 
 def transform_list(input_list):
     return [item.lower().replace(" ", "-") for item in input_list]
