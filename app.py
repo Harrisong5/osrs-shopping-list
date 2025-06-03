@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY")  # Should be set in Heroku config
+app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key")  # Should be set in Heroku config
 
 def transform_list(input_list):
     return [item.lower().replace(" ", "-") for item in input_list]
