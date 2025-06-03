@@ -12,4 +12,4 @@ tasks:
       sudo apt update
       sudo apt install -y google-chrome-stable
       pip install -r requirements.txt
-  - command: python app.py
+  - command: python3 app.py
